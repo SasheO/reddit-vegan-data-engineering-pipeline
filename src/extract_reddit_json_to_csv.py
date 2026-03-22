@@ -170,13 +170,11 @@ for _ in range(10):
 
 
     else:
-        print(response.status_code)
-        print(response.headers)
-        try:
-            print(response.text)
-        except Exception as e:
-            print(e)
-        time.sleep(600)
+        print(response.status_code, response.text)
+        headers = dict(response.headers)
+        print(headers)
+        print(int(headers['x-ratelimit-reset']))
+        time.sleep(int(headers['x-ratelimit-reset'])+1)
         response = requests.get(url, params=params)
 
 print("total number of posts fetched:", count_of_posts_fetched)
