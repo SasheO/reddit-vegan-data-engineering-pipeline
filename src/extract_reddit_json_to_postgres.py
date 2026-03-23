@@ -39,7 +39,8 @@ def handler():
 
     response = requests.get(url, params=params)
 
-    while True:
+    # while True:
+    for _ in range(10): # it seems like there are usually less than 100 posts per day, so this can be hard limited to ten requests. at least one will go through. this will likely not miss too many posts.
         if response.status_code == 200:
             count_of_success_response += 1
 
@@ -151,12 +152,13 @@ def handler():
             if count_of_success_response >= 10: # because at most ten pages can be returned from reddit non-oauth api
                 break
             else: # do it again!
+                time.sleep(5) # rate limits
                 response = requests.get(url, params=params)
         else:
             # TODO: convert this to writing errors to log rather than print statements
-            print(response.status_code, response.text)
             headers = dict(response.headers)
-            print(headers)
+            print(response.status_code, response.text)
+            print("x-ratelimit-reset:", headers['x-ratelimit-reset'])
             time.sleep(int(headers['x-ratelimit-reset'])+5)
             response = requests.get(url, params=params)
             
