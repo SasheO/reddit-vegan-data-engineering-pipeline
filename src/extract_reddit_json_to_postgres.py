@@ -1,13 +1,15 @@
-# https://www.youtube.com/watch?v=vyLvmPkQZkI
+# setting up a free test postgresql rds, setting up security groups to allow inbound connection requests: https://www.youtube.com/watch?v=YxMibQv7w8o 
+# set up lambda with postgre rds: https://www.youtube.com/watch?v=vyLvmPkQZkI
 
 from dotenv import load_dotenv
 import os
-import psycopg2 
-import requests
+import psycopg2 # TODO: install this in the local folder and zip it to upload to AWS lambda
+import requests # TODO: install this in the local folder and zip it to upload to AWS lambda
 import time
 import re
 
 # get environment variables
+# TODO: either install python-dotenv and upload environment variables to aws lambda or hardcode values here in aws lambda
 load_dotenv()
 database = os.getenv("DATABASE")
 user = os.getenv("USER")
