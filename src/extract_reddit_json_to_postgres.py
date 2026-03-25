@@ -3,24 +3,25 @@
 
 from dotenv import load_dotenv
 import os
-import psycopg2 # TODO: install this in the local folder and zip it to upload to AWS lambda
-import requests # TODO: install this in the local folder and zip it to upload to AWS lambda
+import psycopg2 
+import requests
 import time
 import re
 
 # get environment variables
-# TODO: either install python-dotenv and upload environment variables to aws lambda or hardcode values here in aws lambda
+# TODO: check if AWS has a way for managing secrets that does not involve .env, implement it
 load_dotenv()
 database = os.getenv("DATABASE")
 user = os.getenv("USER")
 password= os.getenv("PASSWORD")
 table_name = os.getenv("TABLE_NAME")
+host = os.getenv("ENDPOINT")
 
 # Connect to PostgreSQL
 
 def get_db_connection():
     return psycopg2.connect(
-        host="localhost",
+        host=host,
         database=database,
         user=user,
         password=password
@@ -33,6 +34,7 @@ def extract_src_url(text):
     return ""
 
 def handler():
+    TODO: move establishing the connection outside of the handler function
     subreddit_name = "vegan"
     url = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
     params = {"limit":100}
@@ -137,7 +139,6 @@ def handler():
                 else:
                     has_media = 0
                 
-                # 
                 # TODO: ensure that null values (e.g. null media urls and other like fields) are not entered as 'null' strings
                 insert_value = f"('{post_id}', to_timestamp({int(created_utc)}), '{post_title}'::varchar(130), '{author_id}'::varchar(20), '{author_username}'::varchar(30), {upvote_count}, {downvote_count}, {comments_count}, {crossposts_count}, {awards_received_count}, '{post_text}'::varchar(1000), '{url_to_post}'::varchar(130), {has_media}::bit, '{media_type}'::varchar(20), '{media_title}'::varchar(130), '{media_src}'::varchar(130), '{media_url}'::varchar(130)), " # ON CONFLICT (post_id) DO NOTHING;"
                 insert_value = insert_value.replace("None", "null")
