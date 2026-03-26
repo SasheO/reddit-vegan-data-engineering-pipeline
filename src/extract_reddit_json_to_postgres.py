@@ -10,6 +10,7 @@ import re
 
 # get environment variables
 # TODO: check if AWS has a way for managing secrets that does not involve .env, implement it here
+# TODO: AWS management of environment variables: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
 load_dotenv()
 database = os.getenv("DATABASE")
 user = os.getenv("USER")
@@ -17,8 +18,8 @@ password= os.getenv("PASSWORD")
 table_name = os.getenv("TABLE_NAME")
 host = os.getenv("ENDPOINT")
 
-# Connect to PostgreSQL
-conn = psycopg2.connect(
+
+db_connection = psycopg2.connect(
         host=host,
         database=database,
         user=user,
@@ -26,13 +27,12 @@ conn = psycopg2.connect(
     )
 
 def extract_src_url(text):
-    # TODO: this doesn't work as expected. fix it!
     match = re.search(r'src="([^"]*)"', text)
     if match:
         return match.group(1)
     return None
 
-def handler(event, context):
+def lambda_handler(event, context):
     subreddit_name = "vegan"
     url = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
     params = {"limit":100}
@@ -47,7 +47,7 @@ def handler(event, context):
             count_of_success_response += 1
             
             # start preamble for sql query
-            cursor = conn.cursor()
+            cursor = db_connection.cursor()
             sql_query_to_insert_table_values = f"insert into {table_name} (post_id, created_utc, post_title, author_id, author_username, upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text, post_url, has_media, media_type, media_title, media_src, media_url)  values "
 
             # parse the json response and extract useful data
@@ -120,7 +120,7 @@ def handler(event, context):
                 except:
                     media_src = None
                 try:
-                    media_url = extract_src_url(media_json["html"]) 
+                    media_url = extract_src_url(media_json["oembed"]["html"]) 
                 except:
                     media_url = None
                 try:
@@ -136,7 +136,6 @@ def handler(event, context):
                 else:
                     has_media = 0
                 
-                # TODO: CHECK THIS: ensure that null values (e.g. null media urls and other like fields) are not entered as 'null' strings
                 insert_value = f"('{post_id}', to_timestamp({int(created_utc)}), '{post_title}'::varchar(130), '{author_id}'::varchar(20), '{author_username}'::varchar(30), {upvote_count}, {downvote_count}, {comments_count}, {crossposts_count}, {awards_received_count}, '{post_text}'::varchar(1000), '{url_to_post}'::varchar(130), {has_media}::bit, '{media_type}'::varchar(20), '{media_title}'::varchar(130), '{media_src}'::varchar(130), '{media_url}'::varchar(130)), " # ON CONFLICT (post_id) DO NOTHING;"
                 insert_value = insert_value.replace("'None'", "NULL")
                 sql_query_to_insert_table_values += insert_value
@@ -145,7 +144,7 @@ def handler(event, context):
             # run sql query, close connection to database
             sql_query_to_insert_table_values = sql_query_to_insert_table_values[:-2] + " ON CONFLICT (post_id) DO NOTHING;" # in case there are duplicate rows with primary key (post_id)
             cursor.execute(sql_query_to_insert_table_values)
-            conn.commit()
+            db_connection.commit()
             cursor.close()
             
 
@@ -167,5 +166,5 @@ def handler(event, context):
     
 # open up connection to database and 
 
-handler(None,None)
-conn.close()
+lambda_handler(None,None)
+# db_connection.close() # TODO: figure out if i should close this or not?
