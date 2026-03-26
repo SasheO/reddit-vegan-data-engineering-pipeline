@@ -9,7 +9,7 @@ import time
 import re
 
 # get environment variables
-# TODO: check if AWS has a way for managing secrets that does not involve .env, implement it
+# TODO: check if AWS has a way for managing secrets that does not involve .env, implement it here
 load_dotenv()
 database = os.getenv("DATABASE")
 user = os.getenv("USER")
@@ -18,9 +18,7 @@ table_name = os.getenv("TABLE_NAME")
 host = os.getenv("ENDPOINT")
 
 # Connect to PostgreSQL
-
-def get_db_connection():
-    return psycopg2.connect(
+conn = psycopg2.connect(
         host=host,
         database=database,
         user=user,
@@ -28,13 +26,13 @@ def get_db_connection():
     )
 
 def extract_src_url(text):
+    # TODO: this doesn't work as expected. fix it!
     match = re.search(r'src="([^"]*)"', text)
     if match:
         return match.group(1)
-    return ""
+    return None
 
-def handler():
-    TODO: move establishing the connection outside of the handler function
+def handler(event, context):
     subreddit_name = "vegan"
     url = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
     params = {"limit":100}
@@ -47,9 +45,8 @@ def handler():
     for _ in range(10): # it seems like there are usually less than 100 posts per day, so this can be hard limited to ten requests. at least one will go through. this will likely not miss too many posts.
         if response.status_code == 200:
             count_of_success_response += 1
-
-            # open up connection to database and start preamble for sql query
-            conn = get_db_connection()
+            
+            # start preamble for sql query
             cursor = conn.cursor()
             sql_query_to_insert_table_values = f"insert into {table_name} (post_id, created_utc, post_title, author_id, author_username, upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text, post_url, has_media, media_type, media_title, media_src, media_url)  values "
 
@@ -139,9 +136,9 @@ def handler():
                 else:
                     has_media = 0
                 
-                # TODO: ensure that null values (e.g. null media urls and other like fields) are not entered as 'null' strings
+                # TODO: CHECK THIS: ensure that null values (e.g. null media urls and other like fields) are not entered as 'null' strings
                 insert_value = f"('{post_id}', to_timestamp({int(created_utc)}), '{post_title}'::varchar(130), '{author_id}'::varchar(20), '{author_username}'::varchar(30), {upvote_count}, {downvote_count}, {comments_count}, {crossposts_count}, {awards_received_count}, '{post_text}'::varchar(1000), '{url_to_post}'::varchar(130), {has_media}::bit, '{media_type}'::varchar(20), '{media_title}'::varchar(130), '{media_src}'::varchar(130), '{media_url}'::varchar(130)), " # ON CONFLICT (post_id) DO NOTHING;"
-                insert_value = insert_value.replace("None", "null")
+                insert_value = insert_value.replace("'None'", "NULL")
                 sql_query_to_insert_table_values += insert_value
                 # print(post_id)
             
@@ -150,7 +147,7 @@ def handler():
             cursor.execute(sql_query_to_insert_table_values)
             conn.commit()
             cursor.close()
-            conn.close()
+            
 
             if count_of_success_response >= 10: # because at most ten pages can be returned from reddit non-oauth api
                 break
@@ -168,5 +165,7 @@ def handler():
     # TODO: make this write logs to a table rather than printing
     print("total number of posts fetched:", count_of_posts_fetched) 
     
+# open up connection to database and 
 
-handler()
+handler(None,None)
+conn.close()
