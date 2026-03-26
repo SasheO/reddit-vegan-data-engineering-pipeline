@@ -8,15 +8,15 @@ import requests
 import time
 import re
 
-# get environment variables
-# TODO: check if AWS has a way for managing secrets that does not involve .env, implement it here
-# TODO: AWS secrets (API keys, passwords) should NOT be stored as environmnet variables but rather with secrets manager: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
+# TODO: get AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
 load_dotenv()
+host = os.getenv("ENDPOINT")
 database = os.getenv("DATABASE")
 user = os.getenv("USER")
 password= os.getenv("PASSWORD")
-table_name = os.getenv("TABLE_NAME")
-host = os.getenv("ENDPOINT")
+
+# get environment variable: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
+table_name = os.environ.get("TABLE_NAME", "posts")
 
 
 db_connection = psycopg2.connect(
@@ -163,8 +163,5 @@ def lambda_handler(event, context):
             
     # TODO: make this write logs to a table rather than printing
     print("total number of posts fetched:", count_of_posts_fetched) 
-    
-# open up connection to database and 
 
-lambda_handler(None,None)
 # db_connection.close() # TODO: figure out if i should close this or not?
