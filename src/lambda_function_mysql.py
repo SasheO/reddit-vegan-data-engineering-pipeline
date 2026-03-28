@@ -3,7 +3,7 @@
 
 # from dotenv import load_dotenv
 import os
-import psycopg2 # TODO: this doesn't work on aws https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/import-psycopg2-library-lambda.html 
+import pymysql # TODO: ensure the mysql commands work as expected, change psycopg2 commands to pymysql as needed
 import requests
 import time
 import re
