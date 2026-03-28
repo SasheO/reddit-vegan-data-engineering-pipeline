@@ -6,17 +6,21 @@
 import boto3
 from botocore.exceptions import ClientError
 
-'''
-host = os.getenv("ENDPOINT")
-database = os.getenv("DATABASE")
-user = os.getenv("USER")
-password= os.getenv("PASSWORD")
-'''
+#  use secrets in lambda: https://www.youtube.com/watch?v=pt9nAS4PVBI
 
-def get_secret():
 
-    secret_name = "redditVeganDatabase1Secrets"
-    region_name = "us-east-1"
+def get_db_secrets(secret_name, region_name):
+    """
+    get_db_secrets gets the AWS Secrets for the database
+
+    parameters:
+        secret_name: (str) the name of the AWS secret 
+        region_name: (str) the AWS region the secret is stored in
+    
+    returns: 
+        user: (str) the username 
+        password: (str) the password
+    """
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
@@ -35,5 +39,9 @@ def get_secret():
         raise e
 
     secret = get_secret_value_response['SecretString']
+    print(secret)
 
-    # Your code goes here.
+    user = get_secret_value_response['username']
+    password = get_secret_value_response['password']
+
+    return user, password

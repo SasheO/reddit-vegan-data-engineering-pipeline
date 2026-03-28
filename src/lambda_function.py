@@ -1,22 +1,27 @@
 # setting up a free test postgresql rds, setting up security groups to allow inbound connection requests: https://www.youtube.com/watch?v=YxMibQv7w8o 
 # set up lambda with postgre rds: https://www.youtube.com/watch?v=vyLvmPkQZkI
 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import os
 import psycopg2 
 import requests
 import time
 import re
+from get_db_credentials_from_aws_secrets import *
 
 # TODO: get AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
-load_dotenv()
-host = os.getenv("ENDPOINT")
-database = os.getenv("DATABASE")
-user = os.getenv("USER")
-password= os.getenv("PASSWORD")
+# TODO: store database credentials using amazon secrets https://docs.aws.amazon.com/dms/latest/sbs/schema-conversion-oracle-aurora-mysql-step-4.html
+# load_dotenv()
+
+# get database credentials from AWS secrets
+secret_name = "redditVeganDatabase1Secrets"
+region_name = "us-east-1"
+user, password = get_db_secrets(secret_name, region_name)
 
 # get environment variable: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
 table_name = os.environ.get("TABLE_NAME", "posts")
+host = os.environ.get("ENDPOINT") # TODO: do i have to specify a default value? is this syntax correct?
+database = os.environ.get("DATABASE")
 
 
 db_connection = psycopg2.connect(
