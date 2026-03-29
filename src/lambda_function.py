@@ -1,3 +1,7 @@
+# current issue: Getting 403 http response on lambda
+# troubleshoot: https://repost.aws/knowledge-center/api-gateway-403-error-lambda-authorizer
+# look into cloudwatch logs: https://stackoverflow.com/questions/33109122/aws-lambda-function-rest-api-end-point-403-error
+
 import os
 import pymysql 
 import requests
@@ -36,7 +40,9 @@ def extract_src_url(text):
 def lambda_handler(event, context):
     subreddit_name = "vegan"
     url = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
-    params = {"limit":100}
+    print(os.getenv("MY_REDDIT_USERNAME")) # CHANGED
+    # params = {"limit":100} # CHANGED
+    params = {"limit":100, "User-Agent": f"MyRedditApp/1.0 (by u/{os.getenv("MY_REDDIT_USERNAME")})"} # CHANGED
     count_of_posts_fetched = 0
     count_of_success_response = 0
 
@@ -50,7 +56,12 @@ def lambda_handler(event, context):
             cursor = db_connection.cursor()
 
             # parse the json response and extract useful data
+            print("response.text:", response.text)
             response_json = response.json()
+            with open("output.json", "a+", encoding='utf-8') as f: # CHANGED
+                json.dumps(response_json, f)
+                f.write("\n")
+
             pagination_after_key = response_json["data"]["after"] 
             params["after"] = pagination_after_key
             print("pagination_after_key:",pagination_after_key)
@@ -156,6 +167,7 @@ def lambda_handler(event, context):
             headers = dict(response.headers)
             print(response.status_code, response.text)
             print(headers)
+            time.sleep(10)
             
     # TODO: make this write logs to a table rather than printing
     print("total number of posts fetched:", count_of_posts_fetched) 
