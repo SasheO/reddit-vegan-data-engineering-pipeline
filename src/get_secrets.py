@@ -18,8 +18,7 @@ def get_db_secrets(secret_name, region_name):
         region_name: (str) the AWS region the secret is stored in
     
     returns: 
-        user: (str) the username 
-        password: (str) the password
+        secret: (dict) the secrets
     """
 
     # Create a Secrets Manager client
@@ -39,9 +38,4 @@ def get_db_secrets(secret_name, region_name):
         raise e
 
     secret = get_secret_value_response['SecretString']
-    print(secret)
-
-    user = get_secret_value_response['username']
-    password = get_secret_value_response['password']
-
-    return user, password
+    return secret

@@ -1,35 +1,34 @@
 # setting up a free test postgresql rds, setting up security groups to allow inbound connection requests: https://www.youtube.com/watch?v=YxMibQv7w8o 
 # set up lambda with postgre rds: https://www.youtube.com/watch?v=vyLvmPkQZkI
 
-# from dotenv import load_dotenv
 import os
-import pymysql # TODO: ensure the mysql commands work as expected, change psycopg2 commands to pymysql as needed
+import pymysql 
 import requests
 import time
+import json
 import re
+from datetime import datetime
 from get_secrets import *
 
-# TODO: get AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
-# TODO: store database credentials using amazon secrets https://docs.aws.amazon.com/dms/latest/sbs/schema-conversion-oracle-aurora-mysql-step-4.html
-# load_dotenv()
-
-# get database credentials from AWS secrets
-secret_name = "redditVeganDatabase1Secrets"
+# get database credentials from AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
+secret_name = "redditVeganDatabase2MySQLSecrets"
 region_name = "us-east-1"
-user, password = get_db_secrets(secret_name, region_name)
+secrets = get_db_secrets(secret_name,region_name)
+json_acceptable_string = secrets.replace("'", "\"")
+secrets = json.loads(json_acceptable_string)
 
-# get environment variable: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html
-table_name = os.environ.get("TABLE_NAME", "posts")
-host = os.environ.get("ENDPOINT") # TODO: do i have to specify a default value? is this syntax correct?
-database = os.environ.get("DATABASE")
+database = secrets['dbname']
+user = secrets['username']
+password= secrets['password']
+table_name = os.getenv("TABLE_NAME")
+host = secrets['host']
 
-
-db_connection = psycopg2.connect(
-        host=host,
-        database=database,
-        user=user,
-        password=password
-    )
+db_connection = pymysql.connect(
+    host=host,
+    database=database,  # or 'db' parameter in some PyMySQL versions
+    user=user,
+    password=password
+)
 
 def extract_src_url(text):
     match = re.search(r'src="([^"]*)"', text)
@@ -51,9 +50,7 @@ def lambda_handler(event, context):
         if response.status_code == 200:
             count_of_success_response += 1
             
-            # start preamble for sql query
             cursor = db_connection.cursor()
-            sql_query_to_insert_table_values = f"insert into {table_name} (post_id, created_utc, post_title, author_id, author_username, upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text, post_url, has_media, media_type, media_title, media_src, media_url)  values "
 
             # parse the json response and extract useful data
             response_json = response.json()
@@ -63,6 +60,8 @@ def lambda_handler(event, context):
             reddit_posts = response_json["data"]["children"]
             print("number of posts fetched:", len(reddit_posts))
             count_of_posts_fetched += len(reddit_posts)
+            insert_values = []
+
             for post in reddit_posts:
                 if "id" not in post["data"]:
                     post_id = ""
@@ -136,28 +135,20 @@ def lambda_handler(event, context):
                     media_title = media_json["oembed"]["title"].replace(",", ";").replace("'", "").replace('"', "").replace("\n", "\t")
                 except:
                     media_title = None
-                if has_media:
-                    has_media = 1
-                else:
-                    has_media = 0
                 
-                insert_value = f"('{post_id}', to_timestamp({int(created_utc)}), '{post_title}'::varchar(130), '{author_id}'::varchar(20), '{author_username}'::varchar(30), {upvote_count}, {downvote_count}, {comments_count}, {crossposts_count}, {awards_received_count}, '{post_text}'::varchar(1000), '{url_to_post}'::varchar(130), {has_media}::bit, '{media_type}'::varchar(20), '{media_title}'::varchar(130), '{media_src}'::varchar(130), '{media_url}'::varchar(130)), " # ON CONFLICT (post_id) DO NOTHING;"
-                insert_value = insert_value.replace("'None'", "NULL")
-                sql_query_to_insert_table_values += insert_value
-                # print(post_id)
+
+                if has_media:
+                    insert_value = (post_id, datetime.fromtimestamp(int(created_utc)), post_title[:130], author_id[:130], author_username[:30], upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text[:1000], url_to_post[:130], has_media, media_type[:20], media_title[:130], media_src[:130], media_url[:130])
+                else:
+                    insert_value = (post_id, datetime.fromtimestamp(int(created_utc)), post_title[:130], author_id[:130], author_username[:30], upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text[:1000], url_to_post[:130], has_media, media_type, media_title, media_src, media_url)
+                insert_values.append(insert_value)
             
-            # run sql query, close connection to database
-            sql_query_to_insert_table_values = sql_query_to_insert_table_values[:-2] + " ON CONFLICT (post_id) DO NOTHING;" # in case there are duplicate rows with primary key (post_id)
-            cursor.execute(sql_query_to_insert_table_values)
+            cursor.executemany(f"INSERT IGNORE INTO {table_name} (post_id, created_utc, post_title, author_id, author_username, upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text, post_url, has_media, media_type, media_title, media_src, media_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", insert_values)
             db_connection.commit()
             cursor.close()
             
-
-            if count_of_success_response >= 10: # because at most ten pages can be returned from reddit non-oauth api
-                break
-            else: # do it again!
-                time.sleep(5) # rate limits
-                response = requests.get(url, params=params)
+            time.sleep(5) # rate limits
+            response = requests.get(url, params=params)
         else:
             # TODO: convert this to writing errors to log rather than print statements
             headers = dict(response.headers)
