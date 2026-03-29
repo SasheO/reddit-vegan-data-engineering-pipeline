@@ -1,6 +1,3 @@
-# setting up a free test postgresql rds, setting up security groups to allow inbound connection requests: https://www.youtube.com/watch?v=YxMibQv7w8o 
-# set up lambda with postgre rds: https://www.youtube.com/watch?v=vyLvmPkQZkI
-
 import os
 import pymysql 
 import requests
@@ -25,7 +22,7 @@ host = secrets['host']
 
 db_connection = pymysql.connect(
     host=host,
-    database=database,  # or 'db' parameter in some PyMySQL versions
+    database=database,
     user=user,
     password=password
 )
@@ -149,13 +146,16 @@ def lambda_handler(event, context):
             
             time.sleep(5) # rate limits
             response = requests.get(url, params=params)
-        else:
+        elif response.status_code == 429:
             # TODO: convert this to writing errors to log rather than print statements
             headers = dict(response.headers)
-            print(response.status_code, response.text)
             print("x-ratelimit-reset:", headers['x-ratelimit-reset'])
             time.sleep(int(headers['x-ratelimit-reset'])+5)
             response = requests.get(url, params=params)
+        else:
+            headers = dict(response.headers)
+            print(response.status_code, response.text)
+            print(headers)
             
     # TODO: make this write logs to a table rather than printing
     print("total number of posts fetched:", count_of_posts_fetched) 

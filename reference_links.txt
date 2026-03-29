@@ -1,0 +1,3 @@
+1. setting up a free test postgresql rds, setting up security groups to allow inbound connection requests: https://www.youtube.com/watch?v=YxMibQv7w8o 
+2. set up lambda with postgre rds: https://www.youtube.com/watch?v=vyLvmPkQZkI
+3. get database credentials from AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
