@@ -18,7 +18,7 @@ def get_db_secrets(secret_name, region_name):
         region_name: (str) the AWS region the secret is stored in
     
     returns: 
-        secret: (dict) the secrets
+        secret: (str) the AWS secrets in a json-formattable string
     """
 
     # Create a Secrets Manager client
