@@ -24,12 +24,14 @@ password= secrets['password']
 table_name = os.getenv("TABLE_NAME")
 host = secrets['host']
 
+# open this outside the handler function because opening db connections is resource heavy and i don't want this done every time the lambda function is triggered
+# don't need to close this connection explicitly because Lambda automatically cleans up when container shuts down
 db_connection = pymysql.connect(
     host=host,
     database=database,
     user=user,
     password=password
-)
+) 
 
 def extract_src_url(text):
     match = re.search(r'src="([^"]*)"', text)
@@ -181,5 +183,3 @@ def lambda_handler(event, context):
             
     # TODO: make this write logs to a table rather than printing
     print("total number of posts fetched:", count_of_posts_fetched) 
-
-# db_connection.close() # TODO: figure out if i should close this or not?
