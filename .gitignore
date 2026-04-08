@@ -1,6 +1,5 @@
-*.json
+/scripts/*.json
 *.csv
 .env
-/sql
 /src/*/
 .env*
