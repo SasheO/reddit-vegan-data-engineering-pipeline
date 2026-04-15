@@ -1,7 +1,8 @@
-# TODO: modify this to be triggered by uploading data to S3 bucket, modify this to ingest json from s3 bucket and update rds database
+"""
+This is the AWS lambda function
+"""
 # TODO: put a requirements.txt file in the main directory with needed libraries, document setup requirements
 # TODO: add an image of the data pipeline (from staging with raw json files to amazon s3 to lambda to sql to data analsis) in the readme
-# TODO: add multiline string at the top of this script which describes what it does
 
 import os
 import pymysql 
@@ -38,10 +39,16 @@ db_connection = pymysql.connect(
 ) 
 
 def lambda_handler(event, context):
-    # TODO: open file and read all lines. each line is a separate json object with multiple posts in json_object["data"]["children"]
-    # TODO: for each post, extract the data using extract_reddit_data 
-    # TODO: for each post, save the data to mysql
-    # TODO: add multiline comment that explains what this does
+    """
+    lambda_handler is an AWS lambda function which is triggered when files are created in an s3 bucket. It fetches the file and writes the content of that file to a connected mysql server in AWS RDS.
+
+    parameters:
+        event: (dict) the data passed to the function when it is triggered
+        context: (object) information about the invocation, function configuration, and execution environment
+    
+    returns: 
+        None
+    """
     # extract data from bucket
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'])
@@ -49,7 +56,6 @@ def lambda_handler(event, context):
     count_of_successful_writes_to_mysql_server = 0
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
-        # TODO: insert code for what you want to do here
         
         for listing in response['Body'].iter_lines():
             cursor = db_connection.cursor()
@@ -68,8 +74,6 @@ def lambda_handler(event, context):
             count_of_successful_writes_to_mysql_server += 1 
         
         print("Successful writes to mysql server:", count_of_successful_writes_to_mysql_server)
-
-        return True
 
     except Exception as e:
         print(f"Error getting object {key} from bucket {bucket}: {e}")
