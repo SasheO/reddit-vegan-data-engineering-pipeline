@@ -2,9 +2,19 @@ import re
 from datetime import datetime
 
 def extract_src_url(text):
+    """
+    extract_src_url extracts relevant url from a string in a reddit listing in the format "... src="<target url> ..."
+
+    parameters:
+        text: (str) the string to be searched
+    
+    returns: 
+        url_match (str) or None: if there is a url in the expected format, this function returns it. if there isn't, it returns None.
+    """
     match = re.search(r'src="([^"]*)"', text)
     if match:
-        return match.group(1)
+        url_match = match.group(1)
+        return url_match
     return None
 
 def extract_reddit_data(post):
