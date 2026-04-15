@@ -3,3 +3,6 @@ For myself:
 2. set up lambda with mysql in aws rds: https://www.youtube.com/watch?v=vyLvmPkQZkI
 3. get database credentials from AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
 4. documenting README.md: https://gist.github.com/ericmjl/27e50331f24db3e8f957d1fe7bbbe510?permalink_comment_id=5476687
+5. docustrings conventions for python documentation: https://peps.python.org/pep-0257/ 
+6. connect s3 to lambda: https://www.youtube.com/watch?v=e1tkFsFOBHA 
+7. boto3 library overview in Python: https://srinivish.hashnode.dev/what-is-boto3

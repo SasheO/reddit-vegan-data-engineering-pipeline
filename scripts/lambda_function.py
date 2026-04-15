@@ -1,6 +1,3 @@
-# current issue: Getting 403 http response on lambda
-# troubleshoot: https://repost.aws/knowledge-center/api-gateway-403-error-lambda-authorizer
-# look into cloudwatch logs: https://stackoverflow.com/questions/33109122/aws-lambda-function-rest-api-end-point-403-error
 # TODO: modify this to be triggered by uploading data to S3 bucket, modify this to ingest json from s3 bucket and update rds database
 # TODO: put a requirements.txt file in the main directory with needed libraries, document setup requirements
 # TODO: add an image of the data pipeline (from staging with raw json files to amazon s3 to lambda to sql to data analsis) in the readme
@@ -14,6 +11,9 @@ import json
 import re
 from datetime import datetime
 from get_secrets import *
+import boto3
+
+s3 = boto3.client('s3')
 
 # get database credentials from AWS secrets: https://docs.aws.amazon.com/lambda/latest/dg/with-secrets-manager.html 
 secret_name = "redditVeganDatabase2MySQLSecrets"
@@ -127,6 +127,7 @@ def extract_reddit_data(post):
     except:
         media_title = None
     
+    # TODO: modify all truncations [:130] or [:1000] or whatever to reflect what is accurate to the sql code
     if has_media:
         post_data = (post_id, datetime.fromtimestamp(int(created_utc)), post_title[:130], author_id[:130], author_username[:30], upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text[:1000], url_to_post[:130], has_media, media_type[:20], media_title[:130], media_src[:130], media_url[:130])
     else:
@@ -134,56 +135,21 @@ def extract_reddit_data(post):
     return post_data
 
 def lambda_handler(event, context):
-    subreddit_name = "vegan"
-    url = f"https://www.reddit.com/r/{subreddit_name}/new/.json"
-    print(os.getenv("MY_REDDIT_USERNAME")) # CHANGED
-    # params = {"limit":100} # CHANGED
-    params = {"limit":100, "User-Agent": f"MyRedditApp/1.0 (by u/{os.getenv("MY_REDDIT_USERNAME")})"} # CHANGED
-    count_of_posts_fetched = 0
+    # TODO: open file and read all lines. each line is a separate json object with multiple posts in json_object["data"]["children"]
+    # TODO: for each post, extract the data using extract_reddit_data 
+    # TODO: for each post, save the data to mysql
+    # TODO: add multiline comment that explains what this does
+    # extract data from bucket
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'])
+    try:
+        response = s3.get_object(Bucket=bucket, Key=key)
+        # TODO: insert code for what you want to do here
+        
+        return json_data
 
-    response = requests.get(url, params=params)
+    except Exception as e:
+        print(f"Error getting object {key} from bucket {bucket}: {e}")
+        raise e
 
-    # while True:
-    for _ in range(10): # it seems like there are usually less than 100 posts per day, so this can be hard limited to ten requests. at least one will go through. this will likely not miss too many posts.
-        if response.status_code == 200:   
-                
-            cursor = db_connection.cursor()
-
-            # parse the json response and extract useful data
-            print("response.text:", response.text)
-            response_json = response.json()
-            with open("output.json", "a+", encoding='utf-8') as f: # CHANGED
-                json.dumps(response_json, f)
-                f.write("\n")
-            pagination_after_key = response_json["data"]["after"] 
-            params["after"] = pagination_after_key
-            print("pagination_after_key:",pagination_after_key)
-            reddit_posts = response_json["data"]["children"]
-            print("number of posts fetched:", len(reddit_posts))
-            count_of_posts_fetched += len(reddit_posts)
-
-            post_data_values_list_for_sql_command = []
-            for post in reddit_posts:
-                post_data = extract_reddit_data(post)
-                post_data_values_list_for_sql_command.append(post_data)
-
-            cursor.executemany(f"INSERT IGNORE INTO {table_name} (post_id, created_utc, post_title, author_id, author_username, upvote_count, downvote_count, comments_count, crossposts_count, awards_received_count, post_text, post_url, has_media, media_type, media_title, media_src, media_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", post_data_values_list_for_sql_command)
-            db_connection.commit()
-            cursor.close()
-            
-            time.sleep(5) # rate limits
-            response = requests.get(url, params=params)
-        elif response.status_code == 429:
-            # TODO: convert this to writing errors to log rather than print statements
-            headers = dict(response.headers)
-            print("x-ratelimit-reset:", headers['x-ratelimit-reset'])
-            time.sleep(int(headers['x-ratelimit-reset'])+5)
-            response = requests.get(url, params=params)
-        else:
-            headers = dict(response.headers)
-            print(response.status_code, response.text)
-            print(headers)
-            time.sleep(10)
-            
-    # TODO: make this write logs to a table rather than printing
-    print("total number of posts fetched:", count_of_posts_fetched) 
+    return
