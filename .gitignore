@@ -3,3 +3,5 @@
 .env
 /src/*/
 .env*
+AWS_data_analysis_resources.txt
+tree.txt

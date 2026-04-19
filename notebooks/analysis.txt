@@ -1,0 +1,21 @@
+Eyeball data
+
+get earlist post: 2026-03-05 08:43:51
+get latest post: 2026-04-08 18:09:08
+
+get total number of posts: 985 over a month of collection
+
+Get number of posts per day
+get number of posts per day of the week
+
+Get average number of likes
+get maximum number of likes
+get number of posts with likes > 100, maybe 200
+
+how many posts have downvotes? NONE. WHY?
+
+do nlp analysis to figure out if there is anything common between posts with many likes
+
+do sentiment analysis
+
+do topical analysis
