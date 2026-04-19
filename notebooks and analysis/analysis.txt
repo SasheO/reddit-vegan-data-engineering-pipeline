@@ -27,11 +27,11 @@ Get average number of likes
     - [ ] look into authors with many viral posts over a short time period e.g. 79nkc60l aka DivineandDeadlyAngel. try to explain why (botting?)
 -[ ] get most liked post within past 24 hours for power bi dashboard
 
--[ ] how many posts have downvotes? 
+-[x] how many posts have downvotes? 
     NONE. 
 -[ ] WHY is no one downvoting posts lol
 
--[ ] FEAT 1: represent the data that can be gotten from sql analysis (no ML yet) in a powerbi dashboard
+-[x] FEAT 1: represent basic data in a powerbi dashboard
 
 -[ ] do sentiment analysis
 
@@ -39,3 +39,4 @@ Get average number of likes
     - [ ] maybe enrich database by including a topic column in the posts table. this could be a sentiment analysis added to the transform step of etl.
     - [ ] do topical analysis on the most liked posts to formalise what intuitions i discovered by eyeballing. maybe do analysis all posts with over 500 likes since top 20 have 1000-4000 likes.
     
+-[x] FEAT 2: create report of more in-dept analysis than powerbi dashboard with ML, sentiment analysis, etc enrichmentS
