@@ -6,3 +6,5 @@ For myself:
 5. docustrings conventions for python documentation: https://peps.python.org/pep-0257/ 
 6. connect s3 to lambda: https://www.youtube.com/watch?v=e1tkFsFOBHA 
 7. boto3 library overview in Python: https://srinivish.hashnode.dev/what-is-boto3
+8. about snowflake: https://www.datacamp.com/blog/what-is-snowflake
+9. connecting aws rds to powerbi: https://docs.aws.amazon.com/whitepapers/latest/using-power-bi-with-aws-cloud/connecting-the-microsoft-power-bi-service-to-aws-data-sources.html

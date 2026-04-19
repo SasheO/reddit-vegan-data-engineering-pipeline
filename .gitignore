@@ -5,3 +5,4 @@
 .env*
 AWS_data_analysis_resources.txt
 tree.txt
+power bi/posts_dashboard.pbix

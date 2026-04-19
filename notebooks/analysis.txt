@@ -1,21 +1,41 @@
 Eyeball data
 
-get earlist post: 2026-03-05 08:43:51
-get latest post: 2026-04-08 18:09:08
+-[x] get earlist post: 2026-03-05 08:43:51
+-[x] get latest post: 2026-04-08 18:09:08
 
-get total number of posts: 985 over a month of collection
+-[x] get total number of posts: 985 over a month of collection
 
-Get number of posts per day
-get number of posts per day of the week
+-[x] Get number of posts per day: about 28 rn
+-[x] get number of posts per day of the week: between 24 and 32
 
 Get average number of likes
-get maximum number of likes
-get number of posts with likes > 100, maybe 200
+-[x] get post with maximum number of likes: 1s62523. 
+    It is a meme moralising veganism and humans being bad people for eating meat
+-[ ] get line graph or bar chart showing the number of likes per post or popularity per post
+-[x] see if there is a theme among most liked posts. are they all memes? moral posturing?
+    as of 19 april 2026: (latest post atp is 2026-04-08 18:09:08) 
+    yes actually just from eyeballing the top 20. top 3 and many others are moralising veganism as in "you're a bad person if you aren't vegan". They are mostly memes as well!
+    number 4 (1s4ntt1) is also a meme about people being unwilling to try out vegan cake
+    number 5 (1sbyawc) is the first non-meme. it links to an article about some celebrity going vegan 
+    number 8 (1rs5e4n) is "why i went vegan" type of post
+    DivineandDeadlyAngel (author id: 79nkc60l) has A LOT of viral posts in march and february. hm, is this a sign to look into authors whose posts frequently go viral? could there be botting?
+    number 11 (1rslwja) and 13 (1s9oub4) and 16 (1rtfs5a) is more like vegan good news of plant based milk becoming more widely adopted relative to cow milk, veganism being more widely adopted
+    number 17 and 18 (1rz3kfm) is sharing vegan product for egg whites
+    some posts are about animal activism too. obviously many of the ones that take a moralising frame are animal activism, but number 20 (1rwghnj) is an article about some lady who got arrested for freeing dogs from an unethical breeder
+    
+    - [ ] INSIGHT: memes go viral on the subreddit (verify this by looking at posts with few likes if they have post_url or media), subreddit seems like a echo chamber where moralising veganism is popular, people react to "Why i went vegan" type of posts,
+    - [ ] look into authors with many viral posts over a short time period e.g. 79nkc60l aka DivineandDeadlyAngel. try to explain why (botting?)
+-[ ] get most liked post within past 24 hours for power bi dashboard
 
-how many posts have downvotes? NONE. WHY?
+-[ ] how many posts have downvotes? 
+    NONE. 
+-[ ] WHY is no one downvoting posts lol
 
-do nlp analysis to figure out if there is anything common between posts with many likes
+-[ ] FEAT 1: represent the data that can be gotten from sql analysis (no ML yet) in a powerbi dashboard
 
-do sentiment analysis
+-[ ] do sentiment analysis
 
-do topical analysis
+-[ ] do topical analysis (what are people talking about)
+    - [ ] maybe enrich database by including a topic column in the posts table. this could be a sentiment analysis added to the transform step of etl.
+    - [ ] do topical analysis on the most liked posts to formalise what intuitions i discovered by eyeballing. maybe do analysis all posts with over 500 likes since top 20 have 1000-4000 likes.
+    
